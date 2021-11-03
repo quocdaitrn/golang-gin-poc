@@ -2,3 +2,5 @@
 .idea
 
 gin.log
+
+bin/*

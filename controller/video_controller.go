@@ -14,6 +14,7 @@ var validate *validator.Validate
 type VideoController interface {
 	FindAll() []*entity.Video
 	Save(*gin.Context) (*entity.Video, error)
+	ShowAll(ctx *gin.Context) map[string]interface{}
 }
 
 type videoController struct {
@@ -44,4 +45,13 @@ func (c *videoController) Save(ctx *gin.Context) (*entity.Video, error) {
 	}
 	c.svc.Save(&v)
 	return &v, nil
+}
+
+func (c *videoController) ShowAll(ctx *gin.Context) map[string]interface{} {
+	videos := c.svc.FindAll()
+	data := gin.H{
+		"title":  "Video Page",
+		"videos": videos,
+	}
+	return data
 }
