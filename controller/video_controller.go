@@ -3,9 +3,13 @@ package controller
 import (
 	"github/quocdaitrn/golang-gin-poc/entity"
 	"github/quocdaitrn/golang-gin-poc/service"
+	"github/quocdaitrn/golang-gin-poc/validation"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
+
+var validate *validator.Validate
 
 type VideoController interface {
 	FindAll() []*entity.Video
@@ -17,6 +21,8 @@ type videoController struct {
 }
 
 func New(s service.VideoService) VideoController {
+	validate = validator.New()
+	validate.RegisterValidation("isCool", validation.ValidateCoolVideoTitle)
 	return &videoController{
 		svc: s,
 	}
@@ -27,11 +33,15 @@ func (c *videoController) FindAll() []*entity.Video {
 }
 
 func (c *videoController) Save(ctx *gin.Context) (*entity.Video, error) {
-	var s entity.Video
-	err := ctx.ShouldBindJSON(&s)
+	var v entity.Video
+	err := ctx.ShouldBindJSON(&v)
 	if err != nil {
 		return nil, err
 	}
-	c.svc.Save(&s)
-	return &s, nil
+	err = validate.Struct(v)
+	if err != nil {
+		return nil, err
+	}
+	c.svc.Save(&v)
+	return &v, nil
 }
