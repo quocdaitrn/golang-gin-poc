@@ -34,6 +34,12 @@ func main() {
 
 	server.LoadHTMLGlob("templates/*.html")
 
+	server.GET("/ping", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
 	apiRoutes := server.Group("/api", middleware.BasicAuth())
 	{
 		apiRoutes.GET("/videos", func(ctx *gin.Context) {
