@@ -9,13 +9,18 @@ import (
 	// gindump "github.com/tpkeeper/gin-dump"
 
 	"github/quocdaitrn/golang-gin-poc/controller"
+	"github/quocdaitrn/golang-gin-poc/helpers"
 	"github/quocdaitrn/golang-gin-poc/middleware"
 	"github/quocdaitrn/golang-gin-poc/service"
 )
 
 var (
-	videoService    service.VideoService       = service.New()
+	videoService service.VideoService = service.New()
+	loginService service.LoginService = service.NewLoginService()
+	jwtService   helpers.JWTService   = helpers.NewJWTService()
+
 	videoController controller.VideoController = controller.New(videoService)
+	loginController controller.LoginController = controller.NewLoginController(loginService, jwtService)
 )
 
 func setupLogOutput() {
@@ -40,7 +45,19 @@ func main() {
 		})
 	})
 
-	apiRoutes := server.Group("/api", middleware.BasicAuth())
+	// Login Endpoint: Authentication + Token creation
+	server.POST("/login", func(ctx *gin.Context) {
+		token := loginController.Login(ctx)
+		if token != "" {
+			ctx.JSON(http.StatusOK, gin.H{
+				"token": token,
+			})
+		} else {
+			ctx.JSON(http.StatusUnauthorized, nil)
+		}
+	})
+
+	apiRoutes := server.Group("/api", middleware.AuthorizeJWT())
 	{
 		apiRoutes.GET("/videos", func(ctx *gin.Context) {
 			ctx.JSON(200, videoController.FindAll())
